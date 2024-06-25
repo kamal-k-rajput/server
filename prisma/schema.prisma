@@ -2,7 +2,6 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -14,17 +13,77 @@ datasource db {
 }
 
 model User {
- id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  email String  @unique
-  name  String?
-  posts Post[]
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  email        String?       @unique
+  name         String?
+  mobileNumber Int           @unique
+  appointments Appointment[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 }
 
-model Post {
- id       String    @id @default(auto()) @map("_id") @db.ObjectId
-  title     String
-  content   String?
-  published Boolean? @default(false)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  String? @db.ObjectId
+model Appointment {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  appointmentDate DateTime          @db.Date
+  patient         User              @relation(fields: [patientId], references: [id])
+  patientId       String            @db.ObjectId
+  reason          String
+  status          AppointmentStatus @default(SCHEDULED)
+  doctorID        String            @db.ObjectId
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Doctor {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  firstName    String
+  lastName     String
+  specialty    String
+  email        String         @unique
+  phone        String         @unique
+  address      Address        @relation(fields: [addressId], references: [id])
+  availability Availability[]
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  addressId    String         @db.ObjectId
+}
+
+model Address {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  doctorId  String   @map("id")
+  Doctor    Doctor[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model Availability {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  dayOfWeek Days[]
+  startTime String
+  endTime   String
+  Doctor    Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorId  String?  @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+enum Days {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
 }
